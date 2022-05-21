@@ -22,11 +22,6 @@ BINARIES    ?= jira-rss-client
 # Add latest tag if LATEST_RELEASE is true
 LATEST_RELEASE ?=
 
-ifdef REL_VERSION
-	CONTACT_ROUTER_VERSION := $(REL_VERSION)
-else
-	CONTACT_ROUTER_VERSION := edge
-endif
 
 LOCAL_ARCH := $(shell uname -m)
 ifeq ($(LOCAL_ARCH),x86_64)
@@ -70,19 +65,11 @@ export BINARY_EXT ?= $(BINARY_EXT_LOCAL)
 
 OUT_DIR := ./dist
 
-# Helm template and install setting
-# HELM:=helm
-# RELEASE_NAME?=dapr
-# DAPR_NAMESPACE?=dapr-system
-# HELM_CHART_ROOT:=./charts
-# HELM_CHART_DIR:=$(HELM_CHART_ROOT)/dapr
-# HELM_OUT_DIR:=$(OUT_DIR)/install
-# HELM_MANIFEST_FILE:=$(HELM_OUT_DIR)/$(RELEASE_NAME).yaml
 
 ################################################################################
 # Go build details                                                             #
 ################################################################################
-BASE_PACKAGE_NAME := bitbucket.org/vanadgroup/jira-rss-client
+BASE_PACKAGE_NAME := github.com/NielsGaljaard/jira-rss-client
 
 DEFAULT_LDFLAGS:=-X $(BASE_PACKAGE_NAME)/pkg/version.commit=$(GIT_VERSION) -X $(BASE_PACKAGE_NAME)/pkg/version.version=$(CONTACT_ROUTER_VERSION)
 
@@ -99,14 +86,14 @@ else
   $(info Build with debugger information)
 endif
 
-CONTACT_ROUTER_OUT_DIR := $(OUT_DIR)/$(GOOS)_$(GOARCH)/$(BUILDTYPE_DIR)
-CONTACT_ROUTER_LINUX_OUT_DIR := $(OUT_DIR)/linux_$(GOARCH)/$(BUILDTYPE_DIR)
+PROJECT_OUT_DIR := $(OUT_DIR)/$(GOOS)_$(GOARCH)/$(BUILDTYPE_DIR)
+LINUX_OUT_DIR := $(OUT_DIR)/linux_$(GOARCH)/$(BUILDTYPE_DIR)
 
 ################################################################################
 # Target: build                                                                #
 ################################################################################
 .PHONY: build
-CONTACT_ROUTER_BINS:=$(foreach ITEM,$(BINARIES),$(CONTACT_ROUTER_OUT_DIR)/$(ITEM)$(BINARY_EXT))
+CONTACT_ROUTER_BINS:=$(foreach ITEM,$(BINARIES),$(PROJECT_OUT_DIR)/$(ITEM)$(BINARY_EXT))
 build: $(CONTACT_ROUTER_BINS)
 
 # Generate builds for jira-rss-client binaries for the target
@@ -127,23 +114,23 @@ $(5)/$(1):
 endef
 
 # Generate binary targets
-$(foreach ITEM,$(BINARIES),$(eval $(call genBinariesForTarget,$(ITEM)$(BINARY_EXT),./cmd/$(ITEM),$(GOOS),$(GOARCH),$(CONTACT_ROUTER_OUT_DIR))))
+$(foreach ITEM,$(BINARIES),$(eval $(call genBinariesForTarget,$(ITEM)$(BINARY_EXT),./cmd/$(ITEM),$(GOOS),$(GOARCH),$(PROJECT_OUT_DIR))))
 
 ################################################################################
 # Target: build-linux                                                          #
 ################################################################################
-BUILD_LINUX_BINS:=$(foreach ITEM,$(BINARIES),$(CONTACT_ROUTER_LINUX_OUT_DIR)/$(ITEM))
+BUILD_LINUX_BINS:=$(foreach ITEM,$(BINARIES),$(LINUX_OUT_DIR)/$(ITEM))
 build-linux: $(BUILD_LINUX_BINS)
 
 # Generate linux binaries targets to build linux docker image
 ifneq ($(GOOS), linux)
-$(foreach ITEM,$(BINARIES),$(eval $(call genBinariesForTarget,$(ITEM),./cmd/$(ITEM),linux,$(GOARCH),$(CONTACT_ROUTER_LINUX_OUT_DIR))))
+$(foreach ITEM,$(BINARIES),$(eval $(call genBinariesForTarget,$(ITEM),./cmd/$(ITEM),linux,$(GOARCH),$(LINUX_OUT_DIR))))
 endif
 
 ################################################################################
 # Target: archive                                                              #
 ################################################################################
-ARCHIVE_OUT_DIR ?= $(CONTACT_ROUTER_OUT_DIR)
+ARCHIVE_OUT_DIR ?= $(PROJECT_OUT_DIR)
 ARCHIVE_FILE_EXTS:=$(foreach ITEM,$(BINARIES),archive-$(ITEM)$(ARCHIVE_EXT))
 
 archive: $(ARCHIVE_FILE_EXTS)
@@ -154,10 +141,10 @@ archive: $(ARCHIVE_FILE_EXTS)
 define genArchiveBinary
 ifeq ($(GOOS),windows)
 archive-$(1).zip:
-	7z.exe a -tzip "$(2)\\$(1)_$(GOOS)_$(GOARCH)$(ARCHIVE_EXT)" "$(CONTACT_ROUTER_OUT_DIR)\\$(1)$(BINARY_EXT)"
+	7z.exe a -tzip "$(2)\\$(1)_$(GOOS)_$(GOARCH)$(ARCHIVE_EXT)" "$(PROJECT_OUT_DIR)\\$(1)$(BINARY_EXT)"
 else
 archive-$(1).tar.gz:
-	tar czf "$(2)/$(1)_$(GOOS)_$(GOARCH)$(ARCHIVE_EXT)" -C "$(CONTACT_ROUTER_OUT_DIR)" "$(1)$(BINARY_EXT)"
+	tar czf "$(2)/$(1)_$(GOOS)_$(GOARCH)$(ARCHIVE_EXT)" -C "$(PROJECT_OUT_DIR)" "$(1)$(BINARY_EXT)"
 endif
 endef
 
@@ -185,10 +172,3 @@ test:
 lint:
 	$(GOLANGCI_LINT) run --fix
 
-################################################################################
-# Target: tests                                                                #
-################################################################################
-#include tests/dapr_tests.mk
-
-run:
-	docker-compose -f ./localtest/docker-compose.yml up
