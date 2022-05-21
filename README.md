@@ -21,7 +21,7 @@ LogLevel: production
 Channels:
 - JQL: "assignee=currentUser()"
   Title: mytickets
-  Link: https://quandago.atlassian.net/issues/?jql=assignee%3DcurrentUser()
+  Link: https://<Your Company>.atlassian.net/issues/?jql=assignee%3DcurrentUser()
   Description: MyTickets
   Filepath: /home/<your user>/jrrss/rss/mytickets.xml
 ```
