@@ -39,14 +39,11 @@ func (c *ChannelManager) UpdateChannels() {
 			c.logger.Error("failed to do JQL fetch for channel", zap.String("channel", channel.Title), zap.Error(err))
 		}
 		file, err := os.Create(channel.FilePath)
-		defer func() {
-			ferr := file.Close()
-			c.logger.Error("error closing file", zap.Error(ferr))
-		}()
+		defer file.Close()
 		if err != nil {
 			c.logger.Error("failed to open file for channel", zap.String("channel", channel.Title), zap.Error(err))
 		}
-		c.logger.Info("writing tickets for", zap.String("channel", channel.Title), zap.String("JQL", channel.JQL))
+		c.logger.Info("writing tickets for", zap.Int("nr_tickets", len(*tickets)), zap.String("channel", channel.Title), zap.String("JQL", channel.JQL))
 		err = c.writer.WriteToPath(&rss_writer.RssInput{
 			Description: channel.Description,
 			Link:        channel.Link,

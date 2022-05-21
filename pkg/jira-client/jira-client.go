@@ -94,6 +94,7 @@ func (c *Client) parseFromJson(responseBody []byte) (*[]ticketResponse, error) {
 		c.logger.Info("failed response body", zap.String("body", string(responseBody)))
 		return nil, err
 	}
+	c.logger.Debug("request got", zap.Int("nr_tickets", len(response.Tickets)))
 	return &response.Tickets, nil
 }
 func (c *Client) doJQLRequest(JQL string) ([]byte, error) {

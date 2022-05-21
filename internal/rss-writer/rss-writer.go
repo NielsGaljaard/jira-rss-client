@@ -33,6 +33,7 @@ func New(templatePath string, logger *zap.Logger) (*Writer, error) {
 
 func (w *Writer) WriteToPath(rss *RssInput, writer io.Writer) error {
 	err := w.template.Execute(writer, rss)
+	w.logger.Info("writing", zap.Int("nr of tickets", len(*rss.Tickets)))
 	if err != nil {
 		w.logger.Error("error writing template", zap.Error(err))
 	}
