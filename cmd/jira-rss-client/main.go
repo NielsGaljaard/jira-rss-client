@@ -34,9 +34,10 @@ func main() {
 		os.Exit(1)
 	}
 	jiraConfig := &jira_client.Config{
-		AppUserName: config.AppUser,
-		AppPassword: config.AppPassword,
-		AppBaseURL:  config.AppUrl,
+		AppUserName:   config.AppUser,
+		AppPassword:   config.AppPassword,
+		AppBaseURL:    config.AppUrl,
+		TicketsPerJQL: config.TicketsPerJQL,
 	}
 	client, err := jira_client.New(jiraConfig, log)
 	if err != nil {
