@@ -31,7 +31,7 @@ func New(c *Config, logger *zap.Logger) (*ChannelManager, error) {
 	}, nil
 }
 
-func (c *ChannelManager) UpdateChannels() error {
+func (c *ChannelManager) UpdateChannels() {
 	for _, channel := range *c.channels {
 		c.logger.Debug("updating", zap.Any("channel", channel))
 		tickets, err := c.client.DoJQL(channel.JQL)
@@ -39,11 +39,14 @@ func (c *ChannelManager) UpdateChannels() error {
 			c.logger.Error("failed to do JQL fetch for channel", zap.String("channel", channel.Title), zap.Error(err))
 		}
 		file, err := os.Create(channel.FilePath)
-		defer file.Close()
+		defer func() {
+			ferr := file.Close()
+			c.logger.Error("error closing file", zap.Error(ferr))
+		}()
 		if err != nil {
 			c.logger.Error("failed to open file for channel", zap.String("channel", channel.Title), zap.Error(err))
 		}
-		c.logger.Debug("writing tickets for", zap.String("channel", channel.Title), zap.Any("tickets", tickets))
+		c.logger.Info("writing tickets for", zap.String("channel", channel.Title), zap.String("JQL", channel.JQL))
 		err = c.writer.WriteToPath(&rss_writer.RssInput{
 			Description: channel.Description,
 			Link:        channel.Link,
@@ -54,5 +57,4 @@ func (c *ChannelManager) UpdateChannels() error {
 			c.logger.Error("error writing tickets for channel", zap.String("channel", channel.Title), zap.Error(err))
 		}
 	}
-	return nil
 }
