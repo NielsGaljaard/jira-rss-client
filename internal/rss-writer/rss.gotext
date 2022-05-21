@@ -1,0 +1,24 @@
+<!--suppress ALL -->
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
+<channel>
+    <title>{{ .Title }}</title>
+    <description>{{ .Description }}</description>
+    <link>{{ .Link }}</link>
+        {{ range .Tickets }}
+            <item>
+                <title>{{.Key}} -- {{.Summary}} --  {{.Status}}</title>
+                <guid>{{.Id}}</guid>
+                <link>https://quandago.atlassian.net/browse{{.Key}}</link>
+                <description>
+                    summary: {{.Summary}}
+                    reporter: {{.Reporter}}
+                    assigned to: {{.Assignee}}
+                    priority: {{.Priority}}
+                    type: {{.IssueType}}
+                    status: {{.Status}}
+                </description>
+            </item>
+        {{ else}}
+        {{end}}
+</channel>
+</rss>
