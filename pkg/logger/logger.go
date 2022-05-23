@@ -6,7 +6,9 @@ func New(loglevel string) (*zap.Logger, error) {
 	var err error
 	var log *zap.Logger
 	if loglevel == "production" {
-		log, err = zap.NewProduction()
+		config := zap.NewProductionConfig()
+		config.OutputPaths = []string{"stdout"}
+		log, err = config.Build()
 	} else {
 		log, err = zap.NewDevelopment()
 	}
